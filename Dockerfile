@@ -35,7 +35,7 @@ RUN chmod -R 775 /var/www/app/storage /var/www/app/bootstrap/cache
 USER www-data
 
 # Use the entrypoint script
-ENTRYPOINT ["sh", "-c", "/usr/local/bin/entrypoint.sh", "--"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 EXPOSE 9000
 
