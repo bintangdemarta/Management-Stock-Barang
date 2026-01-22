@@ -1,0 +1,21 @@
+
+   ErrorException 
+
+  Writing to directory /var/www/.config/psysh is not allowed.
+
+  at vendor/psy/psysh/src/ConfigPaths.php:395
+    391▕             @\mkdir($dir, 0700, true);
+    392▕         }
+    393▕ 
+    394▕         if (!\is_dir($dir) || !\is_writable($dir)) {
+  ➜ 395▕             \trigger_error(\sprintf('Writing to directory %s is not allowed.', $dir), \E_USER_NOTICE);
+    396▕ 
+    397▕             return false;
+    398▕         }
+    399▕
+
+      [2m+20 vendor frames [22m
+
+  21  artisan:16
+      Illuminate\Foundation\Application::handleCommand(Object(Symfony\Component\Console\Input\ArgvInput))
+
