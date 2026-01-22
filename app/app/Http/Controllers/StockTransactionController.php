@@ -2,63 +2,59 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StockTransaction;
+use App\Models\Item;
+use App\Models\Warehouse;
+use App\Models\Location;
+use App\Services\StockService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class StockTransactionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    protected $stockService;
+
+    public function __construct(StockService $stockService)
+    {
+        $this->stockService = $stockService;
+    }
+
     public function index()
     {
-        //
+        $transactions = StockTransaction::with(['item', 'user', 'warehouse', 'location'])->latest()->paginate(20);
+        return view('transactions.index', compact('transactions'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $items = Item::all();
+        $warehouses = Warehouse::all();
+        // efficient location loading via AJAX is better, but simple full load for now
+        $locations = Location::all();
+        return view('transactions.create', compact('items', 'warehouses', 'locations'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
-    }
+        $request->validate([
+            'item_id' => 'required|exists:items,id',
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'location_id' => 'nullable|exists:locations,id',
+            'type' => 'required|in:in,out,adjustment',
+            'quantity' => 'required|integer|min:1',
+            'date' => 'required|date',
+            'notes' => 'nullable|string',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        try {
+            $data = $request->all();
+            $data['user_id'] = Auth::id(); // Assign current user
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+            $this->stockService->createTransaction($data);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+            return redirect()->route('transactions.index')->with('success', 'Transaction recorded successfully.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        }
     }
 }

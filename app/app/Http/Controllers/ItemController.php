@@ -2,63 +2,65 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Item;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class ItemController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $items = Item::with('category')->get();
+        return view('items.index', compact('items'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $categories = Category::all();
+        return view('items.create', compact('categories'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'sku' => 'required|string|unique:items,sku',
+            'category_id' => 'required|exists:categories,id',
+            'unit' => 'required|string',
+            'cost_price' => 'numeric',
+            'selling_price' => 'numeric',
+        ]);
+
+        Item::create($request->all());
+
+        return redirect()->route('items.index')->with('success', 'Item created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(Item $item)
     {
-        //
+        $categories = Category::all();
+        return view('items.edit', compact('item', 'categories'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Item $item)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'sku' => 'required|string|unique:items,sku,' . $item->id,
+            'category_id' => 'required|exists:categories,id',
+            'unit' => 'required|string',
+            'cost_price' => 'numeric',
+            'selling_price' => 'numeric',
+        ]);
+
+        $item->update($request->all());
+
+        return redirect()->route('items.index')->with('success', 'Item updated successfully.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Item $item)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $item->delete();
+        return redirect()->route('items.index')->with('success', 'Item deleted successfully.');
     }
 }
